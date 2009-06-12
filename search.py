@@ -2,6 +2,7 @@
 
 from urllib import urlopen, urlencode
 from message import Message, MessageContainer
+from config import Config
 import simplejson
 
 class Search:
@@ -10,7 +11,7 @@ class Search:
         self._since = since
 
     def __create_url(self):
-        query = { 'q': self._hashtag }
+        query = { 'q': self._hashtag, 'rpp': 100, 'show_user': False }
         if (self._since):
             query['since_id'] = self._since
 
@@ -22,7 +23,13 @@ class Search:
         url = self.__create_url()
         conn = urlopen(url)
         retval = simplejson.load(conn)
-        return retval
+        for msg in retval['results']:
+            container = MessageContainer(msg['id'])
+            if (container.inner == None):
+                container.inner = msg
+            if (not container.was_retweeted and
+                    container.username.upper() != Config.username.upper()):
+                yield container
 
 
 if __name__ == '__main__':

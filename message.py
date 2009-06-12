@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from datetime import datetime
+import cPickle as pickle
+import os
 
 class Message(object):
     def __init__(self, username, message, tweeted_at, retweeted_at = None):
@@ -14,12 +16,13 @@ class Message(object):
                 self._retweeted_at)
 
     def post(self, twit):
-        if (self._retweeted_at != None):
-            # retweet using twit
+        if (self._retweeted_at == None):
+            twit.statuses.update(status="%s" % self)
             self._retweeted_at = datetime.utcnow()
+        return True
 
     def __str__(self):
-        return "%s: %s" % (self._username, self._message)
+        return "(@%s) %s" % (self._username, self._message)
 
     def __repr__(self):
         return "<Message: %s>" % self
@@ -38,7 +41,7 @@ class MessageContainer(object):
             self.__load_message()
         return self.__message 
     def set_inner(self, value):
-        self.__message = self.__parse_twitter(value)
+        self.__parse_twitter(value)
         self.__save_message()
     inner = property(get_inner, set_inner)
 
@@ -54,20 +57,30 @@ class MessageContainer(object):
         return self.inner._tweeted_at
     tweeted_at = property(get_tweeted_at)
 
+    def _check_retweeted_at(self):
+        return self.inner._retweeted_at != None
+    was_retweeted = property(_check_retweeted_at)
+
     def post(self, twit):
-        self.inner.post(twit)
+        if (self.inner.post(twit)):
+            self.__save_message()
 
     def __create_filename(self):
-        return "%s.msg" % self.msgId
+        return "data/%s.msg" % self.msgId
     filename = property(__create_filename) 
 
     def __parse_twitter(self, value):
         screenname = value["from_user"]
         message = value["text"]
         tweeted = value["created_at"]
+        self.__message = Message(screenname, message, tweeted)
+        self.__msgId = value["id"]
 
     def __load_message(self):
         self.__message = pickle.load(open(self.filename, "r"))
 
     def __save_message(self):
-        pickle.dump(self.__message, open(self.filename, "r"))
+        pickle.dump(self.__message, open(self.filename, "w"))
+
+    def __str__(self):
+        return "%s" % self.inner

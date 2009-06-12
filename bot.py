@@ -7,6 +7,7 @@ from urllib import urlopen
 
 from message_queue import MessageQueue
 from message import MessageContainer
+from search import Search
 
 class TweetBot(object):
     def __init__(self, api, hashtag):
@@ -21,23 +22,30 @@ class TweetBot(object):
         since = None
         if (self._queue.last_processed != None):
             since = self._queue.last_processed
-            print "Enqueuing Messages Since Msg#%s UTC" % since
+
+        finder = Search(self._hashtag, since)
+        for msg in finder.Find():
+            self._queue.put(msg)
 
         self.__SaveQueue()
 
-    def PostQueue(self):
+    def PostMessagesInQueue(self):
         if (self._queue == None):
             self.__LoadQueue()
 
-        # Process messages in queue that have not been retweeted yet
+        for msg in self._queue.queue:
+            msg.post(self._api)
 
         self.__SaveQueue()
 
+    def CleanUpOldMessages(self):
+        pass
+
     def __LoadQueue(self):
-        if (os.access("%s.mq" % self._hashtag, os.F_OK)):
-            self._queue = pickle.load(open("%s.mq" % self._hashtag))
+        if (os.access("data/%s.mq" % self._hashtag, os.F_OK)):
+            self._queue = pickle.load(open("data/%s.mq" % self._hashtag))
         else:
             self._queue = MessageQueue()
 
     def __SaveQueue(self):
-        pickle.dump(self._queue, open("%s.mq" % self._hashtag, "w"))
+        pickle.dump(self._queue, open("data/%s.mq" % self._hashtag, "w"))

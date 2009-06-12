@@ -16,6 +16,7 @@ class MessageQueue(Queue):
         Queue.put(self, value)
 
     def __setstate__(self, state):
+       Queue.__init__(self)
        self.queue = state[0]
        self.last_processed = state[1]
 
@@ -26,11 +27,10 @@ if __name__ == "__main__":
     import message
 
     mq = MessageQueue()
-    mq.put(message.Message("shakes", "test 1", datetime.utcnow()))
-    mq.put(message.Message("shakes", "test 2", datetime.utcnow()))
-    mq.put(message.Message("shakes", "test 3", datetime.utcnow()))
-    mq.put(message.Message("shakes", "test 4", datetime.utcnow()))
-    mq.StartProcessing()
+    mq.put(message.MessageContainer(1, message.Message("shakes", "test 1", datetime.utcnow())))
+    mq.put(message.MessageContainer(2, message.Message("shakes", "test 2", datetime.utcnow())))
+    mq.put(message.MessageContainer(3, message.Message("shakes", "test 3", datetime.utcnow())))
+    mq.put(message.MessageContainer(4, message.Message("shakes", "test 4", datetime.utcnow())))
     print mq.last_processed,
     print mq.queue
 

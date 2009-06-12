@@ -2,8 +2,11 @@
 
 from twitter import Twitter
 from bot import TweetBot
-t = Twitter()
-# profile = t.account.verify_credentials()
+from config import Config
+t = Twitter(Config.username, Config.password)
+profile = t.account.verify_credentials()
 
 bot = TweetBot(t, "#WAPK")
 bot.EnqueueNewMessages()
+bot.PostMessagesInQueue()
+bot.CleanUpOldMessages()
