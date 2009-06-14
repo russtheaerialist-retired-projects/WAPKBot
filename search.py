@@ -5,6 +5,14 @@ from message import Message, MessageContainer
 from config import Config
 import simplejson
 
+def msgid_compare(x, y):
+    if (x['id'] > y['id']):
+        return 1
+    elif x['id'] == y['id']:
+        return 0
+    else:
+        return -1
+
 class Search:
     def __init__(self, hashtags, since = None):
         self._hashtags = hashtags
@@ -20,13 +28,15 @@ class Search:
         return url
 
     def __create_phrase(self):
-        return "+OR+".join(self._hashtags)
+        retval = " OR ".join(self._hashtags)
+        print retval
+        return retval
 
     def Find(self):
         url = self.__create_url()
         conn = urlopen(url)
         retval = simplejson.load(conn)
-        for msg in retval['results']:
+        for msg in retval['results'].sort(msgid_compare):
             container = MessageContainer(msg['id'])
             if (container.inner == None):
                 container.inner = msg
