@@ -6,18 +6,21 @@ from config import Config
 import simplejson
 
 class Search:
-    def __init__(self, hashtag, since = None):
-        self._hashtag = hashtag
+    def __init__(self, hashtags, since = None):
+        self._hashtags = hashtags
         self._since = since
 
     def __create_url(self):
-        query = { 'q': self._hashtag, 'rpp': 100, 'show_user': False }
+        query = { 'q': self.__create_phrase(), 'rpp': 100, 'show_user': False }
         if (self._since):
             query['since_id'] = self._since
 
         url = "http://search.twitter.com/search.json?%s" % urlencode(query)
 
         return url
+
+    def __create_phrase(self):
+        return "+OR+".join(self._hashtags)
 
     def Find(self):
         url = self.__create_url()

@@ -10,9 +10,9 @@ from message import MessageContainer
 from search import Search
 
 class TweetBot(object):
-    def __init__(self, api, hashtag):
+    def __init__(self, api, hashtags):
         self._api = api
-        self._hashtag = hashtag
+        self._hashtags = hashtags
         self._queue = None
 
     def EnqueueNewMessages(self):
@@ -23,7 +23,7 @@ class TweetBot(object):
         if (self._queue.last_processed != None):
             since = self._queue.last_processed
 
-        finder = Search(self._hashtag, since)
+        finder = Search(self._hashtags, since)
         for msg in finder.Find():
             self._queue.put(msg)
 
@@ -41,11 +41,15 @@ class TweetBot(object):
     def CleanUpOldMessages(self):
         pass
 
+    def __create_filename(self):
+        return "data/%s.mq" % "_".join(self._hashtags).replace("#", "").lower()
+    filename = property(__create_filename)
+
     def __LoadQueue(self):
-        if (os.access("data/%s.mq" % self._hashtag, os.F_OK)):
-            self._queue = pickle.load(open("data/%s.mq" % self._hashtag))
+        if (os.access("data/%s.mq" % self.filename, os.F_OK)):
+            self._queue = pickle.load(open(self.filename))
         else:
             self._queue = MessageQueue()
 
     def __SaveQueue(self):
-        pickle.dump(self._queue, open("data/%s.mq" % self._hashtag, "w"))
+        pickle.dump(self._queue, open(self.filename, "w"))
