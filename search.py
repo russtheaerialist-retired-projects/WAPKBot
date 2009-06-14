@@ -29,14 +29,14 @@ class Search:
 
     def __create_phrase(self):
         retval = " OR ".join(self._hashtags)
-        print retval
         return retval
 
     def Find(self):
         url = self.__create_url()
         conn = urlopen(url)
         retval = simplejson.load(conn)
-        for msg in retval['results'].sort(msgid_compare):
+        retval['results'].sort(msgid_compare)
+        for msg in retval['results']:
             container = MessageContainer(msg['id'])
             if (container.inner == None):
                 container.inner = msg
